@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { formatISO, isSameDay, isToday } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import clsxm from '@/utils/clsxm';
@@ -30,17 +30,8 @@ interface ModalInfo {
 }
 
 const EventCalendar = ({ activeMonthDate, eventsData, className, onSuccessSaveData }: CalendarProps) => {
-  const [calendarDates, setCalendarDates] = useState<Date[]>([]);
   const [modalInfo, setModalInfo] = useState<ModalInfo | null>(null);
-  const isMounted = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (isMounted.current) {
-      setCalendarDates(getCalendarDates(new Date(activeMonthDate)));
-    } else {
-      isMounted.current = true;
-    }
-  }, [activeMonthDate]);
+  const calendarDates = useMemo(() => getCalendarDates(new Date(activeMonthDate)), [activeMonthDate]);
 
   const handleDismissModal = () => {
     setModalInfo(null);
