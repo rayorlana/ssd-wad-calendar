@@ -3,7 +3,7 @@ import { formatISO, isSameDay, isToday } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import clsxm from '@/utils/clsxm';
 import { getCalendarDates } from '@/utils/date';
-import { generateRandomKey, getRandomEventItemColor } from '@/utils/helper';
+import { EVENT_ITEM_COLORS, generateRandomKey } from '@/utils/helper';
 import { getUserCalendarEvents, setUserCalendarEvents } from '@/utils/storage';
 import AddEditEventModal, { AddEditEventModalState } from './AddEditEventModal';
 import CalendarEventItem, { UserCalendarEvent } from './CalendarEventItem';
@@ -32,6 +32,12 @@ interface ModalInfo {
 const EventCalendar = ({ activeMonthDate, eventsData, className, onSuccessSaveData }: CalendarProps) => {
   const [modalInfo, setModalInfo] = useState<ModalInfo | null>(null);
   const calendarDates = useMemo(() => getCalendarDates(new Date(activeMonthDate)), [activeMonthDate]);
+
+  // @ts-expect-error filtered EVENT_ITEM_COLORS type mismatch
+  const getRandomEventItemColor = existingColors => {
+    const availableColors = EVENT_ITEM_COLORS.filter(color => !existingColors.includes(color));
+    return availableColors[Math.floor(Math.random() * availableColors.length)];
+  };
 
   const handleDismissModal = () => {
     setModalInfo(null);
@@ -68,18 +74,37 @@ const EventCalendar = ({ activeMonthDate, eventsData, className, onSuccessSaveDa
 
   const handleSaveEvent = (state: AddEditEventModalState) => {
     if (modalInfo?.data) {
+      const isEdit = !!modalInfo.data?.id;
+
+      // id payload
+      const id = isEdit && modalInfo.data?.id ? modalInfo.data.id : generateRandomKey();
+      // name payload
+      const name = state?.eventName;
+      // date payload
       const date = new Date(modalInfo.data?.date as string);
       if (state?.eventTime?.key) {
         const [hours, minutes] = state.eventTime.key.split(':');
         date.setHours(Number(hours));
         date.setMinutes(Number(minutes));
       }
+      // color payload
+      let color;
+      if (isEdit) {
+        color = modalInfo.data?.color;
+      } else {
+        // get existing color in the same event date to prevent duplicate event color
+        const existingColors = eventsData?.length ? eventsData.filter(event => isSameDay(new Date(event.date), date)).map(event => event.color) : [];
+        if (existingColors.length) {
+          color = getRandomEventItemColor(existingColors);
+        }
+      }
+
       const eventPayload: UserCalendarEvent = {
-        id: modalInfo.data?.id ?? generateRandomKey(),
-        name: state?.eventName,
+        id,
+        name,
         date: formatISO(date),
         ...(state?.eventInviteesEmail.length > 0 && { invitees: state.eventInviteesEmail.split(',') }),
-        color: modalInfo.data?.color ?? getRandomEventItemColor(),
+        color,
       };
       let existingEventsData = getUserCalendarEvents();
       if (modalInfo?.data?.id) {
