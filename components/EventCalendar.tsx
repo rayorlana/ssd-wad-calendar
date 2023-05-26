@@ -35,7 +35,11 @@ const EventCalendar = ({ activeMonthDate, eventsData, className, onSuccessSaveDa
 
   // @ts-expect-error filtered EVENT_ITEM_COLORS type mismatch
   const getRandomEventItemColor = existingColors => {
-    const availableColors = EVENT_ITEM_COLORS.filter(color => !existingColors.includes(color));
+    let availableColors = EVENT_ITEM_COLORS;
+    if (existingColors.length) {
+      // @ts-expect-error filtered EVENT_ITEM_COLORS type mismatch
+      availableColors = availableColors.filter(color => !existingColors.includes(color));
+    }
     return availableColors[Math.floor(Math.random() * availableColors.length)];
   };
 
@@ -94,9 +98,7 @@ const EventCalendar = ({ activeMonthDate, eventsData, className, onSuccessSaveDa
       } else {
         // get existing color in the same event date to prevent duplicate event color
         const existingColors = eventsData?.length ? eventsData.filter(event => isSameDay(new Date(event.date), date)).map(event => event.color) : [];
-        if (existingColors.length) {
-          color = getRandomEventItemColor(existingColors);
-        }
+        color = getRandomEventItemColor(existingColors);
       }
 
       const eventPayload: UserCalendarEvent = {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import clsxm from '@/utils/clsxm';
 
 export interface CalendarEvent {
   name: string;
@@ -20,7 +21,9 @@ interface CalendarEventItemProps {
 function CalendarEventItem({ event, onClick }: CalendarEventItemProps) {
   return (
     <div
-      className="flex flex-col gap-y-0.5 overflow-hidden rounded-lg px-2.5 py-1 text-xs text-white hover:opacity-90"
+      className={clsxm('flex flex-col gap-y-0.5 overflow-hidden rounded-lg px-2.5 py-1 text-xs text-white hover:opacity-90', {
+        'bg-charcoal': !event?.color,
+      })}
       style={{ backgroundColor: event?.color }}
       onClick={evt => {
         evt.preventDefault();
